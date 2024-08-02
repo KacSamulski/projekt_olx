@@ -23,7 +23,7 @@ def load_from_json(input_file="proxies.json"):
         return data
     
 
-def proxy_validator(data, link):
+def proxy_validator(data, link, number_of_proxies=6):
     proxies_to_check = [
 
     ]
@@ -35,26 +35,27 @@ def proxy_validator(data, link):
         ip = proxy.get('ip')
         port = proxy.get('port')
         proxies_to_check.append(f"{protocol}://{ip}:{port}")
-    for proxy in proxies_to_check:
-        try:
-            response = requests.get(link, proxies={"http": proxy, "https": proxy})
-            if response.status_code == 200:
-                valid_proxies.append(proxy)
-                print("Strona zaladowana poprawnie.")
-            else:
-                print("Błąd proxy.")
-        except requests.exceptions.RequestException as e:
-            
-            continue  
-    print(valid_proxies)
-    return valid_proxies
+        while len(valid_proxies) != min(number_of_proxies, len(proxies_to_check)):
+            for proxy in proxies_to_check:
+                try:
+                    response = requests.get(link, proxies={"http": proxy, "https": proxy})
+                    if response.status_code == 200:
+                        valid_proxies.append(proxy)
+                        print("Strona zaladowana poprawnie.")
+                    else:
+                        print("Błąd proxy.")
+                except requests.exceptions.RequestException as e:
+                    
+                    continue  
+        print(valid_proxies)
+        return valid_proxies
 
 
 
-
-link = 'https://www.olx.pl/'
-api_link = 'https://api.proxyscrape.com/v3/free-proxy-list/get?request=displayproxies&protocol=http&proxy_format=ipport&format=json&anonymity=Anonymous&timeout=20000'
-data = api_import_proxy(api_link)
-valid = proxy_validator(data, link)
-save_to_json(valid, "valid_proxies.json")
+if __name__ == "__main__":
+    link = 'https://www.olx.pl/'
+    api_link = 'https://api.proxyscrape.com/v3/free-proxy-list/get?request=displayproxies&protocol=http&proxy_format=ipport&format=json&anonymity=Anonymous&timeout=20000'
+    data = api_import_proxy(api_link)
+    valid = proxy_validator(data, link)
+    save_to_json(valid, 'proxies/valid/valid_proxies.json')
 
