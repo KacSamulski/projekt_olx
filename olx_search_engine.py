@@ -19,24 +19,47 @@ proxies_ready = proxy_module.proxy_validator(proxies_to_check, link)
 page_to_scrape = requests.get(link, proxies=proxies_ready)
 soup = BeautifulSoup(page_to_scrape, "html.parser")
 
-def scrapper(link, proxies=proxy_module.api_import_proxy(api_link)):
-    response = requests.get(link, proxies=proxies_ready)
-    soup = BeautifulSoup(response, 'html.parser')
-    return soup
 
-def link_appender(link, proxies=proxies_ready):
-    soup = scrapper(link, proxies)
+def link_appender(link, my_proxies=proxies_ready):
     links = [
         link
     ]
-    number_of_pages_string = soup.findAll("a", attrs={"class":"css-1mi714g"})
-    number_of_pages = int(number_of_pages_string)
-    current_page = 0
-    while current_page != number_of_pages:
+    counter = 0
+    current_page = 1
+
+    try:
+        response = requests.get(url, proxies= my_proxies[counter])
+        soup = BeautifulSoup(response, 'html.parser')
+    
+        number_of_pages_string = soup.findAll("a", attrs={"class":"css-1mi714g"})
+        number_of_pages = int(number_of_pages_string)
+        
         chunk = soup.find4All("a", attrs={"data-testid":"pagination-forward", "data-cy":"pagination-forward"})
         next_page_href = chunk.get("href")
         links.append(next_page_href)
+        print(f'number of pages is {number_of_pages}, ilosc linkow to {len(links)}')
+    except:
+        print("Failed to load initial site")
+    finally:
+        counter += 1
         current_page += 1
+    print(f"obecne proxy {my_proxies[counter]}")
+    print(f"obecna strona {current_page}")
+    
+    while current_page != number_of_pages:
+        try:
+            res = requests.get(links[current_page], proxies=my_proxies[counter]) 
+            soup = BeautifulSoup(response, 'html.parser')
+            chunk = soup.find4All("a", attrs={"data-testid":"pagination-forward", "data-cy":"pagination-forward"})
+            next_page_href = chunk.get("href")
+            links.append(next_page_href)
+        except:
+            print(f"Nie udalo siena stronie {current_page}")
+        finally:
+            counter += 1
+            current_page += 1
+            print(f"obecne proxy {my_proxies[counter]}")
+            print(f"obecna strona {current_page}")
         break
     return links
 
